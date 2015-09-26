@@ -22,7 +22,7 @@ Pod::Spec.new do |s|
   s.source           = { :git => "https://github.com/kishikawakatsumi/KeychainAccess.git", :tag => "v#{s.version}" }
   s.social_media_url = 'https://twitter.com/k_katsumi'
 
-  s.ios.deployment_target = "8.0"
+  s.ios.deployment_target = "7.0"
   s.osx.deployment_target = "10.9"
   s.watchos.deployment_target = '2.0'
   s.requires_arc = true
