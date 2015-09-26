@@ -286,7 +286,7 @@ public class Keychain {
         #if os(iOS)
         if #available(iOS 9.0, *) {
             query[kSecUseAuthenticationUI as String] = kCFBooleanFalse
-        } else if #available(iOS 8.0, *) {
+        } else {
             query[kSecUseNoAuthenticationUI as String] = kCFBooleanTrue
         }
         #endif
@@ -801,10 +801,8 @@ extension Options {
         }
         
         #if os(iOS)
-        if #available(iOS 8.0, *) {
-            if authenticationPrompt != nil {
-                query[kSecUseOperationPrompt as String] = authenticationPrompt
-            }
+        if authenticationPrompt != nil {
+            query[kSecUseOperationPrompt as String] = authenticationPrompt
         }
         #endif
         
@@ -831,19 +829,15 @@ extension Options {
         }
 
         if let policy = authenticationPolicy {
-            if #available(OSX 10.10, iOS 8.0, *) {
-                var error: Unmanaged<CFError>?
-                guard let accessControl = SecAccessControlCreateWithFlags(kCFAllocatorDefault, accessibility.rawValue, SecAccessControlCreateFlags(rawValue: policy.rawValue), &error) else {
-                    if let error = error?.takeUnretainedValue() {
-                        return (attributes, error.error)
-                    }
-                    let message = Status.UnexpectedError.description
-                    return (attributes, NSError(domain: KeychainAccessErrorDomain, code: Int(Status.UnexpectedError.rawValue), userInfo: [NSLocalizedDescriptionKey: message]))
+            var error: Unmanaged<CFError>?
+            guard let accessControl = SecAccessControlCreateWithFlags(kCFAllocatorDefault, accessibility.rawValue, SecAccessControlCreateFlags(rawValue: policy.rawValue), &error) else {
+                if let error = error?.takeUnretainedValue() {
+                    return (attributes, error.error)
                 }
-                attributes[kSecAttrAccessControl as String] = accessControl
-            } else {
-                print("Unavailable 'Touch ID integration' on OS X versions prior to 10.10.")
+                let message = Status.UnexpectedError.description
+                return (attributes, NSError(domain: KeychainAccessErrorDomain, code: Int(Status.UnexpectedError.rawValue), userInfo: [NSLocalizedDescriptionKey: message]))
             }
+            attributes[kSecAttrAccessControl as String] = accessControl
         } else {
             attributes[kSecAttrAccessible as String] = accessibility.rawValue
         }
@@ -1165,9 +1159,6 @@ extension AuthenticationType : RawRepresentable, CustomStringConvertible {
 extension Accessibility : RawRepresentable, CustomStringConvertible {
     
     public init?(rawValue: String) {
-        guard #available(OSX 10.10, iOS 8.0, *) else  {
-            return nil
-        }
         switch rawValue {
         case String(kSecAttrAccessibleWhenUnlocked):
             self = WhenUnlocked
@@ -1197,11 +1188,7 @@ extension Accessibility : RawRepresentable, CustomStringConvertible {
         case Always:
             return kSecAttrAccessibleAlways as String
         case WhenPasscodeSetThisDeviceOnly:
-            if #available(OSX 10.10, iOS 8.0, *) {
-                return kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly as String
-            } else {
-                fatalError("Unavailable 'Touch ID integration' on OS X versions prior to 10.10.")
-            }
+            return kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly as String
         case WhenUnlockedThisDeviceOnly:
             return kSecAttrAccessibleWhenUnlockedThisDeviceOnly as String
         case AfterFirstUnlockThisDeviceOnly:
@@ -1234,9 +1221,6 @@ extension Accessibility : RawRepresentable, CustomStringConvertible {
 extension AuthenticationPolicy : RawRepresentable, CustomStringConvertible {
     
     public init?(rawValue: Int) {
-        guard #available(OSX 10.10, iOS 8.0, *) else  {
-            return nil
-        }
         let flags = SecAccessControlCreateFlags.UserPresence
         
         switch rawValue {
@@ -1250,11 +1234,7 @@ extension AuthenticationPolicy : RawRepresentable, CustomStringConvertible {
     public var rawValue: Int {
         switch self {
         case UserPresence:
-            if #available(OSX 10.10, iOS 8.0, *) {
-                return SecAccessControlCreateFlags.UserPresence.rawValue
-            } else {
-                fatalError("Unavailable 'Touch ID integration' on OS X versions prior to 10.10.")
-            }
+            return SecAccessControlCreateFlags.UserPresence.rawValue
         }
     }
     
